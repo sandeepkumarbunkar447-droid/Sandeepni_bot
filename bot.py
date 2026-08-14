@@ -12,17 +12,21 @@ chat_id = '1179672183'
 
 def get_syn_price():
     try:
-        # CoinCap API for Synapse (SYN)
-        url = "https://api.coincap.io/v2/assets/synapse"
-        response = requests.get(url, timeout=10)
+        # CoinGecko API using standard public URL
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=synapse-2&vs_currencies=usd&include_24hr_change=true"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            return f"API Error: Status {response.status_code}"
+            
         data = response.json()
         
-        if 'data' not in data:
-            return "API Error: Synapse data not found."
+        if 'synapse-2' not in data:
+            return "API Error: Synapse token data not found."
             
-        asset = data['data']
-        price = float(asset['priceUsd'])
-        change = float(asset['changePercent24Hr'])
+        price = data['synapse-2']['usd']
+        change = data['synapse-2']['usd_24h_change']
         
         message = f"📊 SYNAPSE (SYN) Auto Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
         if change > 0:
@@ -39,7 +43,10 @@ def send_telegram():
         message = get_syn_price()
         tg_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": message}
-        requests.post(tg_url, json=payload)
+        try:
+            requests.post(tg_url, json=payload, timeout=10)
+        except:
+            pass
         time.sleep(1200)  # Har 20 minute
 
 @app.route('/')
