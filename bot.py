@@ -10,9 +10,8 @@ app = Flask(__name__)
 TOKEN = '8613588573:AAHhrbzvG3DVPCbVZV2Bx1wUKAtpdJK1enk'
 chat_id = '1179672183'
 
-def get_syn_price():
+def get_syn_signal():
     try:
-        # CoinGecko API using standard public URL
         url = "https://api.coingecko.com/api/v3/simple/price?ids=synapse-2&vs_currencies=usd&include_24hr_change=true"
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
@@ -21,28 +20,45 @@ def get_syn_price():
             return f"API Error: Status {response.status_code}"
             
         data = response.json()
-        
         if 'synapse-2' not in data:
             return "API Error: Synapse token data not found."
             
         price = data['synapse-2']['usd']
         change = data['synapse-2']['usd_24h_change']
         
-        message = f"📊 SYNAPSE (SYN) Auto Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
-        if change > 0:
-            message += "🟢 Market is Bullish (Up)"
+        # --- BUY / SELL ANALYSIS LOGIC ---
+        signal = ""
+        action_emoji = ""
+        
+        if change > 3.0:
+            signal = "STRONG BUY 🚀 (Bullish Momentum)"
+            action_emoji = "🟢"
+        elif change > 0:
+            signal = "BUY / HOLD 📈 (Market Up)"
+            action_emoji = "🟢"
+        elif change < -3.0:
+            signal = "STRONG SELL ⚠️ (Bearish Drop)"
+            action_emoji = "🔴"
         else:
-            message += "🔴 Market is Bearish (Down)"
-            
+            signal = "SELL / WAIT 📉 (Market Down)"
+            action_emoji = "🔴"
+
+        message = (
+            f"🤖 **SYNAPSE (SYN) Trading Signal**\n\n"
+            f"{action_emoji} **Action:** {signal}\n"
+            f"💰 **Current Price:** ${price:.4f}\n"
+            f"📊 **24h Change:** {change:.2f}%\n\n"
+            f"_Analysed automatically based on 24h trend._"
+        )
         return message
     except Exception as e:
-        return f"Error fetching data: {str(e)}"
+        return f"Error fetching analysis: {str(e)}"
 
 def send_telegram():
     while True:
-        message = get_syn_price()
+        message = get_syn_signal()
         tg_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-        payload = {"chat_id": chat_id, "text": message}
+        payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         try:
             requests.post(tg_url, json=payload, timeout=10)
         except:
@@ -51,7 +67,7 @@ def send_telegram():
 
 @app.route('/')
 def home():
-    return "Bot is running automatically every 20 minutes in background!"
+    return "Trading Signal Bot is running automatically every 20 minutes!"
 
 if __name__ == "__main__":
     threading.Thread(target=send_telegram, daemon=True).start()
