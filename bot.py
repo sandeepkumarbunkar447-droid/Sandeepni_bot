@@ -12,13 +12,25 @@ chat_id = '1179672183'
 
 def get_syn_price():
     try:
-        url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=SYN&tsyms=USD"
+        # CoinCap API for Synapse (SYN)
+        url = "https://api.coincap.io/v2/assets/synapse"
         response = requests.get(url, timeout=10)
         data = response.json()
-        raw_data = data['RAW']['SYN']['USD']
-        price = raw_data['PRICE']
-        change = raw_data['CHANGEPCT24HOUR']
-        return f"📊 SYNAPSE (SYN) Auto Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
+        
+        if 'data' not in data:
+            return "API Error: Synapse data not found."
+            
+        asset = data['data']
+        price = float(asset['priceUsd'])
+        change = float(asset['changePercent24Hr'])
+        
+        message = f"📊 SYNAPSE (SYN) Auto Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
+        if change > 0:
+            message += "🟢 Market is Bullish (Up)"
+        else:
+            message += "🔴 Market is Bearish (Down)"
+            
+        return message
     except Exception as e:
         return f"Error fetching data: {str(e)}"
 
@@ -28,16 +40,14 @@ def send_telegram():
         tg_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": message}
         requests.post(tg_url, json=payload)
-        time.sleep(1200)  # Har 20 minute mein message bhejega (1200 seconds = 20 mins)
+        time.sleep(1200)  # Har 20 minute
 
 @app.route('/')
 def home():
     return "Bot is running automatically every 20 minutes in background!"
 
 if __name__ == "__main__":
-    # Background thread shuru karna
     threading.Thread(target=send_telegram, daemon=True).start()
-    
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
     
