@@ -15,26 +15,24 @@ def home():
 @app.route('/trigger')
 def trigger_bot():
     try:
-        # Binance ki API se SYN/USDT ka data lena
-        url = "https://api.binance.com/api/v3/ticker/24hr?symbol=SYNUSDT"
+        # CoinGecko API: Binance se zyada reliable hai Render ke liye
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=synapse&vs_currencies=usd&include_24hr_change=true"
         response = requests.get(url, timeout=10)
         
-        # Agar symbol galat ho ya error aaye
         if response.status_code != 200:
-            return f"API Error: Symbol shayad Binance par 'SYNUSDT' na ho (Status: {response.status_code})"
+            return f"API Error: {response.status_code}"
             
         data = response.json()
-        price = float(data['lastPrice'])
-        change = float(data['priceChangePercent'])
+        # CoinGecko ka JSON structure
+        price = data['synapse']['usd']
+        change = data['synapse']['usd_24h_change']
 
-        # Message banana
         message = f"📊 SYNAPSE (SYN) Live Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
         if change > 0:
             message += "🟢 Market is Bullish (Up)"
         else:
             message += "🔴 Market is Bearish (Down)"
 
-        # Telegram par bhejna
         tg_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": message}
         res = requests.post(tg_url, json=payload).json()
