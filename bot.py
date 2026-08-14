@@ -15,19 +15,20 @@ def home():
 @app.route('/trigger')
 def trigger_bot():
     try:
-        # CoinGecko API se SYN ka live price lena (Render friendly)
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=synapse&vs_currencies=usd&include_24hr_change=true"
+        # Binance ki API se SYN/USDT ka data lena
+        url = "https://api.binance.com/api/v3/ticker/24hr?symbol=SYNUSDT"
         response = requests.get(url, timeout=10)
         
+        # Agar symbol galat ho ya error aaye
         if response.status_code != 200:
-            return f"API Error: {response.status_code}"
+            return f"API Error: Symbol shayad Binance par 'SYNUSDT' na ho (Status: {response.status_code})"
             
         data = response.json()
-        price = data['synapse']['usd']
-        change = data['synapse']['usd_24h_change']
+        price = float(data['lastPrice'])
+        change = float(data['priceChangePercent'])
 
         # Message banana
-        message = f"📊 SYN Live Update (CoinGecko)\nPrice: ${price:,.2f}\n24h Change: {change:.2f}%\n"
+        message = f"📊 SYNAPSE (SYN) Live Update\nPrice: ${price:.4f}\n24h Change: {change:.2f}%\n"
         if change > 0:
             message += "🟢 Market is Bullish (Up)"
         else:
