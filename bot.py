@@ -16,8 +16,8 @@ def run_flask():
     app.run(host='0.0.0.0', port=10000)
 
 # 2. Bot Details
-TOKEN = 'YAHAN_APNA_TOKEN_PASTE_KAREIN'
-chat_id = 'YAHAN_APNI_ID_PASTE_KAREIN'
+TOKEN = '8613588573:AAHhrbzvG3DVPCbVZV2Bx1wUKAtpdJK1enk'
+chat_id = '1179672183'
 
 bot = Bot(token=TOKEN)
 
@@ -30,7 +30,7 @@ def calculate_ema(prices, period):
 
 def get_advanced_analysis():
     try:
-        url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=50"
+        url = "https://api.binance.com/api/v3/klines?symbol=SYNUSDT&interval=1h&limit=50"
         response = requests.get(url).json()
         closes = [float(candle[4]) for candle in response]
         current_price = closes[-1]
@@ -74,7 +74,7 @@ async def bot_loop():
         data = get_advanced_analysis()
         if data:
             price, rsi, macd, sig_line, signal, sl, tp = data
-            message = f"📊 **BTC Advanced Analysis**\n\n"
+            message = f"📊 **SYN Advanced Analysis**\n\n"
             message += f"💰 Current Price: ${price:.2f}\n"
             message += f"📈 RSI (14): {rsi:.2f}\n"
             message += f"📉 MACD: {macd:.2f} | Signal: {sig_line:.2f}\n\n"
