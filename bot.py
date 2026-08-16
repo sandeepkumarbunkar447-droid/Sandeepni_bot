@@ -7,25 +7,27 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# Config - Render par setup karein
+# Config - Render par environment variables set hain
 TOKEN = os.environ.get('TELEGRAM_TOKEN', '8613588573:AAHhrbzvG3DVPCbVZV2Bx1wUKAtpdJK1enk')
 chat_id = os.environ.get('CHAT_ID', '1179672183')
 
 def get_full_sigma_analysis():
     try:
         # 1. OHLCV Data fetch (Historical Candlesticks)
-        # Coinpaprika se OHLCV data le rahe hain
         url = "https://api.coinpaprika.com/v1/coins/syn-synapse/ohlcv/latest"
-        data = requests.get(url, timeout=15).json()
+        response = requests.get(url, timeout=15)
         
-        # DataFrame mein convert karna
+        if response.status_code != 200:
+            return "Sigma System Error: Failed to fetch API data."
+            
+        data = response.json()
         df = pd.DataFrame(data)
         
-        # 2. Manual Candle Calculations (No external heavy libs)
+        # 2. Manual Candle Calculations (Pure & Robust)
         # RSI Calculation (14 periods)
         delta = df['close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['rsi'] = 100 - (100 / (1 + rs))
         
@@ -71,8 +73,12 @@ def get_full_sigma_analysis():
 # Flask & Threading setup
 def send_telegram():
     while True:
-        message = get_full_sigma_analysis()
-        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": chat_id, "text": message, "parse_mode": "Markdown"})
+        try:
+            message = get_full_sigma_analysis()
+            tg_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+            requests.post(tg_url, json={"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}, timeout=10)
+        except Exception:
+            pass
         time.sleep(1200)
 
 @app.route('/')
