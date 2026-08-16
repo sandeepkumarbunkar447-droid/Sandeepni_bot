@@ -1,4 +1,4 @@
-    import os
+import os
 import time
 import threading
 import requests
@@ -9,7 +9,7 @@ from flask import Flask
 app = Flask(__name__)
 
 # Config
-TOKEN = os.environ.get('8613588573:AAHhrbzvG3DVPCbVZV2Bx1wUKAtpdJK1enk')
+TOKEN = os.environ.get('TELEGRAM_TOKEN', '8613588573:AAHhrbzvG3DVPCbVZV2Bx1wUKAtpdJK1enk')
 chat_id = os.environ.get('CHAT_ID', '1179672183')
 
 def calculate_rsi(data, window=14):
@@ -32,9 +32,6 @@ def get_sigma_signal():
         price = df['close'].iloc[-1]
         
         # 3. Strong Sigma Confluence Logic
-        # BUY: RSI < 35 (Oversold) + Strong Support
-        # SELL: RSI > 65 (Overbought) + Choti (Top) reached
-        
         signal = "WAITING FOR SIGMA CONFLUENCE ⚪"
         emoji = "⚪"
         
@@ -54,7 +51,6 @@ def get_sigma_signal():
     except Exception as e:
         return f"Sigma System Error: {str(e)}"
 
-# --- Flask & Threading (Keep as is) ---
 def send_telegram():
     while True:
         message = get_sigma_signal()
