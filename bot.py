@@ -13,7 +13,7 @@ chat_id = os.environ.get('CHAT_ID', '1179672183')
 
 def get_full_sigma_analysis():
     try:
-        url = "https://api.coinpaprika.com/v1/coins/syn-synapse/ohlcv/latest"
+        url = "https://api.coinpaprika.com/v1/coins/home-defiapp/ohlcv/latest"
         response = requests.get(url, timeout=15)
         
         if response.status_code != 200:
